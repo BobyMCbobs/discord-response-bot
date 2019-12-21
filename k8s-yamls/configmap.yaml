@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: responses-data
+  namespace: discord-response-bot
+data:
+  responses.yaml: |
+    ping: pong
+    test: this is a test
+    hello:
+    - welcome, fellow!
