@@ -26,27 +26,35 @@ client.login(vars.DiscordClientToken).then(res => {
 
 client.on('message', handleMessage)
 
+// search in message for a response message
+function checkMessageForTriggerPhrase(message, responses) {
+  var triggerWord
+  Object.keys(responses).map(trigger => {
+    console.log({message, triggerWord, trigger})
+    if (message.includes(trigger) && typeof triggerWord === 'undefined') {
+      triggerWord = trigger
+    }
+  })
+  return triggerWord
+}
+
+// parse messages as they come through
 function handleMessage(msg) {
-  if (msg.member.user.tag === vars.DiscordBotUserTag) {
-    return
-  }
   var triggerWord
   var message = msg.content.toLowerCase()
   message = message.replace(/ /g,'').replace(/\n/g,'')
   var responses = getResponsesYAML()
-  if (!Object.keys(responses).includes(message)) {
+  if (msg.member.user.tag === vars.DiscordBotUserTag) {
     return
   }
-  Object.keys(responses).map(trigger => {
-    if (message.includes(trigger)) {
-      triggerWord = trigger
-      if (typeof responses[trigger] === 'object') {
-        msg.channel.send(randomPicker(responses[trigger]))
-      } else {
-        msg.channel.send(responses[trigger])
-      }
-    }
-  })
+  triggerWord = checkMessageForTriggerPhrase(message, responses)
+  if (typeof responses[triggerWord] === 'object') {
+    msg.channel.send(randomPicker(responses[triggerWord]))
+  } else if (typeof responses[triggerWord] === 'undefined') {
+    return
+  } else {
+    msg.channel.send(responses[triggerWord])
+  }
   logger(`[${msg.channel.guild.name}/${msg.channel.name}] ${msg.member.user.tag} triggered a response, with the word '${triggerWord}'`)
   return
 }
