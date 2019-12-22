@@ -30,7 +30,6 @@ client.on('message', handleMessage)
 function checkMessageForTriggerPhrase(message, responses) {
   var triggerWord
   Object.keys(responses).map(trigger => {
-    console.log({message, triggerWord, trigger})
     if (message.includes(trigger) && typeof triggerWord === 'undefined') {
       triggerWord = trigger
     }
