@@ -4,11 +4,11 @@ const Discord = require('discord.js')
 const client = new Discord.Client()
 require('dotenv').config()
 
-const vars = {
+const vars = Object.freeze({
   DiscordClientToken: process.env.APP_DISCORD_CLIENT_TOKEN || '',
   DiscordBotUserTag: process.env.APP_DISCORD_BOT_USER_TAG || '',
   ResponsesYamlLocation: process.env.APP_RESPONSES_YAML_LOCATION || ''
-}
+})
 
 checkEnv()
 checkResponses()
@@ -17,7 +17,7 @@ client.once('ready', () => {
 	logger('Discord bot is live.')
 })
 
-client.login(vars.DiscordClientToken).then(res => {
+client.login(vars.DiscordClientToken).then(() => {
   logger('Successfully logged in.')
 }).catch(err => {
   logger('Failed to login')
@@ -30,7 +30,10 @@ client.on('message', handleMessage)
 function checkMessageForTriggerPhrase(message, responses) {
   var triggerWord
   Object.keys(responses).map(trigger => {
-    if (message.includes(trigger) && typeof triggerWord === 'undefined') {
+    var re = new RegExp(trigger, 'g')
+    var found = re.exec(message)
+
+    if (found && typeof triggerWord === 'undefined') {
       triggerWord = trigger
     }
   })
@@ -41,7 +44,7 @@ function checkMessageForTriggerPhrase(message, responses) {
 function handleMessage(msg) {
   var triggerWord
   var message = msg.content.toLowerCase()
-  message = message.replace(/ /g,'').replace(/\n/g,'')
+  message = message.replace(/\n/g,'')
   var responses = getResponsesYAML()
   if (msg.member.user.tag === vars.DiscordBotUserTag) {
     return
@@ -54,7 +57,7 @@ function handleMessage(msg) {
   } else {
     msg.channel.send(responses[triggerWord])
   }
-  logger(`[${msg.channel.guild.name}/${msg.channel.name}] ${msg.member.user.tag} triggered a response, with the word '${triggerWord}'`)
+  logger(`[${msg.channel.guild.name}/${msg.channel.name}] ${msg.member.user.tag} triggered a response, with the word/pattern '${triggerWord}'`)
   return
 }
 
