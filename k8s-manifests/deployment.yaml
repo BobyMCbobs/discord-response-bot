@@ -29,8 +29,6 @@ spec:
               secretKeyRef:
                 name: discord-response-bot
                 key: APP_DISCORD_CLIENT_TOKEN
-          - name: APP_DISCORD_BOT_USER_TAG
-            value: mybot#1234
           - name: APP_RESPONSES_YAML_LOCATION
             value: /app/cfg/responses.yaml
         volumeMounts:
