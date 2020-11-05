@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: discord-response-bot
+  labels:
+    app: discord-response-bot
 spec:
   replicas: 1
   selector:
@@ -21,7 +23,7 @@ spec:
           runAsUser: 1000
           runAsGroup: 1000
           allowPrivilegeEscalation: false
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: APP_DISCORD_CLIENT_TOKEN
             valueFrom:
