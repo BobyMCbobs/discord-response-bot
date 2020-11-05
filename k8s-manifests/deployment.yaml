@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: discord-response-bot
-  namespace: discord-response-bot
 spec:
   replicas: 1
   selector:

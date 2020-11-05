@@ -25,13 +25,26 @@ docker build -t registry.gitlab.com/bobymcbobs/discord-response-bot:latest .
 ```
 
 ## Deployment in Kubernetes
-Values in the configs should be adjusted (especially the ConfigMap)
-
+Create a namespace:
 ```bash
-kubectl apply -f k8s-manifests/namespace.yaml,k8s-manifests
+kubectl create ns discord-response-bot
 ```
 
-Please give a minute or a few seconds once applying the ConfigMap.
+Create a secret with the Discord Client Token:
+```bash
+kubectl -n discord-response-bot create secret generic discord-response-bot \
+  --from-literal=APP_DISCORD_CLIENT_TOKEN=MY_TOKEN_HERE
+```
+
+Install the app:
+```bash
+kubectl -n discord-response-bot apply -f k8s-manifests
+```
+
+Edit the configuration:
+```bash
+kubectl -n discord-response-bot edit configmap discord-response-bot
+```
 
 ## Environment variables
 
