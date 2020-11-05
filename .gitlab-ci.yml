@@ -28,7 +28,7 @@ stages:
 .kaniko-build: &kaniko-build |
   /kaniko/executor \
     --context $CI_PROJECT_DIR \
-    --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
+    --dockerfile $CI_PROJECT_DIR/Dockerfile \
     --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME \
     $KANIKO_EXTRA_DESTINATION
 
