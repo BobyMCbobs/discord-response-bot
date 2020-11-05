@@ -45,7 +45,7 @@ function handleMessage(msg) {
     var message = msg.content.toLowerCase()
     message = message.replace(/\n/g,'')
     var responses = getResponsesYAML()
-    if (msg.member.user.tag === client.user.tag) {
+    if (msg.member?.user.tag === client.user.tag) {
         return
     }
     triggerWord = checkMessageForTriggerPhrase(message, responses)
