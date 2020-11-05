@@ -42,5 +42,5 @@ Please give a minute or a few seconds once applying the ConfigMap.
 
 ## License
 Copyright 2019-2020 Caleb Woodbine.
-This project is licensed under the [GPL-3.0](http://www.gnu.org/licenses/gpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).
+This project is licensed under the [AGPL-3.0](http://www.gnu.org/licenses/agpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).
 This program comes with absolutely no warranty.
