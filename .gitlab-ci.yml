@@ -1,15 +1,19 @@
 stages:
   - build
+  - tag-container-image
 
-.kaniko-build-pre-script: &kaniko-build-pre-script |
+variables:
+  PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
+  REGISTRIES: "$CI_REGISTRY"
+
+.container-build-pre-script: &container-build-pre-script |
   set -x
-  mkdir -p /kaniko/.docker
-  echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+  img login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 
-.kaniko-build-taggable-name: &kaniko-build-taggable-name |
+.container-build-taggable-name: &container-build-taggable-name |
   set -x
   COMMIT_HASH="???"
-  BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)"
+  BUILD_DATE="$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')"
   if [[ -z "$CI_COMMIT_TAG" ]]; then
     COMMIT_HASH="$CI_COMMIT_SHORT_SHA"
     PRINTABLE_COMMIT_HASH="-$COMMIT_HASH"
@@ -17,29 +21,42 @@ stages:
   if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
     BRANCH_NAME="-$CI_COMMIT_BRANCH"
   fi
+  export CI_PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
 
-.kaniko-pre-build-release-version: &kaniko-pre-build-release-version |
+.container-prepare-version-tags: &container-pre-build-release-version |
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
-    export KANIKO_EXTRA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$APP_BUILD_VERSION"
+    for reg in $REGISTRIES; do
+      export IMAGE_DESTINATIONS_WITH_TAGS="$IMAGE_DESTINATIONS_WITH_TAGS -t $reg/$CI_PROJECT_PATH:$APP_BUILD_VERSION"
+      export IMAGE_DESTINATIONS="$IMAGE_DESTINATIONS $reg/$CI_PROJECT_PATH:$APP_BUILD_VERSION"
+    done
   fi
+  for reg in $REGISTRIES; do
+    export IMAGE_DESTINATIONS_WITH_TAGS="$IMAGE_DESTINATIONS_WITH_TAGS -t $reg/$CI_PROJECT_PATH:latest$BRANCH_NAME"
+    export IMAGE_DESTINATIONS="$IMAGE_DESTINATIONS $reg/$CI_PROJECT_PATH:latest$BRANCH_NAME"
+  done
 
-.kaniko-build: &kaniko-build |
-  /kaniko/executor \
-    --context $CI_PROJECT_DIR \
-    --dockerfile $CI_PROJECT_DIR/Dockerfile \
-    --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME \
-    $KANIKO_EXTRA_DESTINATION
+.container-build: &container-build |
+  img build \
+    $IMAGE_DESTINATIONS_WITH_TAGS \
+    --platform $PLATFORMS \
+    -f $CI_PROJECT_DIR/Dockerfile \
+    .
+  for TAG in $IMAGE_DESTINATIONS; do
+    img push $TAG
+  done
 
-build:
+build-container:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:debug-v0.13.0
+    name: alpine:3.14
     entrypoint: [""]
+  retry: 2
   before_script:
-    - *kaniko-build-pre-script
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - apk add img
+    - *container-build-pre-script
+    - *container-build-taggable-name
+    - *container-pre-build-release-version
   script:
-    - *kaniko-build
+    - *container-build
